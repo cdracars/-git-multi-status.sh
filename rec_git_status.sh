@@ -1,24 +1,30 @@
 #!/bin/bash
 
-for i in *.git ; do
-	( cd $i
-		RES=$(git status | grep -E '^# (Changes|Changed|Untracked)')
-		STAT=""
-		grep -e 'Untracked' <<<${RES} >/dev/null 2>&1
-		if [ $? -eq 0 ] ; then
-			STAT="[Untracked]"
-		fi
-		grep -e 'Changed' <<<${RES} >/dev/null 2>&1
-		if [ $? -eq 0 ] ; then
-			STAT="$STAT [Modified]"
-		fi
-		grep -e 'Changes' <<<${RES} >/dev/null 2>&1
-		if [ $? -eq 0 ] ; then
-			STAT="$STAT [Staged]"
-		fi
+# usage: $0 source_dir [source_dir] ...
+# where source_dir args are directories containing git repositories
 
-		if [ -n "$STAT" ] ; then
-			echo "$i : $STAT"
-		fi
-	)
+for i in $@ ; do
+  for gitdir in `find $i -name .git` ; do
+    ( working=$(dirname $gitdir)
+      cd $working
+      RES=$(git status | grep -E '^# (Changes|Untracked)')
+      STAT=""
+      grep -e 'Untracked' <<<${RES} >/dev/null 2>&1
+      if [ $? -eq 0 ] ; then
+        STAT=" [Untracked]"
+      fi
+      grep -e 'Changes not staged for commit' <<<${RES} >/dev/null 2>&1
+      if [ $? -eq 0 ] ; then
+        STAT="$STAT [Modified]"
+      fi
+      grep -e 'Changes to be committed' <<<${RES} >/dev/null 2>&1
+      if [ $? -eq 0 ] ; then
+        STAT="$STAT [Staged]"
+      fi
+
+      if [ -n "$STAT" ] ; then
+        echo "$working :$STAT"
+      fi
+    )
+  done
 done
