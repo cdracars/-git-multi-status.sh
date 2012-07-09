@@ -3,7 +3,23 @@
 # usage: $0 source_dir [source_dir] ...
 # where source_dir args are directories containing git repositories
 
-for i in $@ ; do
+red="\033[00;31m"
+green="\033[00;32m"
+yellow="\033[00;33m"
+blue="\033[00;34m"
+purple="\033[00;35m"
+cyan="\033[00;36m"
+
+reset="\033[00m"
+
+
+if [ $# -eq 0 ] ; then
+  ARGS="."
+else
+  ARGS=$@
+fi
+
+for i in $ARGS ; do
   for gitdir in `find $i -name .git` ; do
     ( working=$(dirname $gitdir)
       cd $working
@@ -11,27 +27,27 @@ for i in $@ ; do
       STAT=""
       grep -e 'Untracked' <<<${RES} >/dev/null 2>&1
       if [ $? -eq 0 ] ; then
-        STAT=" [Untracked]"
+        STAT=" $red[Untracked]$reset"
       fi
       grep -e 'Changes not staged for commit' <<<${RES} >/dev/null 2>&1
       if [ $? -eq 0 ] ; then
-        STAT="$STAT [Modified]"
+        STAT="$STAT $red[Modified]$reset"
       fi
       grep -e 'Changes to be committed' <<<${RES} >/dev/null 2>&1
       if [ $? -eq 0 ] ; then
-        STAT="$STAT [Staged]"
+        STAT="$STAT $green[Staged]$reset"
       fi
       grep -e 'Your branch is ahead' <<<${RES} >/dev/null 2>&1
       if [ $? -eq 0 ] ; then
-        STAT="$STAT [Unpushed]"
+        STAT="$STAT $yellow[Unpushed]$reset"
       fi
       grep -e 'Your branch is behind' <<<${RES} >/dev/null 2>&1
       if [ $? -eq 0 ] ; then
-        STAT="$STAT [Unmerged]"
+        STAT="$STAT $cyan[Unmerged]$reset"
       fi
 
       if [ -n "$STAT" ] ; then
-        echo "$working :$STAT"
+        echo -e "$working :$STAT"
       fi
     )
   done
